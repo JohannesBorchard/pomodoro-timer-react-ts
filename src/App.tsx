@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import ButtonPrimary from "./components/ButtonPrimary"
 import Header from "./components/Header"
 import Counter from "./components/Counter"
+import DurationPicker from "./components/DurationPicker"
 
 function App() {
   const [secondsLeft, setSecondsLeft]: [
@@ -30,6 +31,7 @@ function App() {
       <div className="h-screen bg-red-700 text-white">
         <Header />
         <main className="flex flex-col items-center">
+          <DurationPicker />
           <Counter timeLeft={() => formatTimeFromSeconds(secondsLeft)} />
           <ButtonPrimary />
         </main>
