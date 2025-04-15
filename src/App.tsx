@@ -1,24 +1,45 @@
 import { useState, useEffect } from "react"
 import ButtonPrimary from "./components/ButtonPrimary"
+import ButtonSecondary from "./components/ButtonSecondary"
 import Header from "./components/Header"
 import Counter from "./components/Counter"
 import DurationPicker from "./components/DurationPicker"
+import tickSound from "./assets/clock_tick.wav"
+import successSound from "./assets/success.wav"
 
 function App() {
   const [secondsLeft, setSecondsLeft]: [
     number,
     React.Dispatch<React.SetStateAction<number>>
-  ] = useState(25 * 60)
+  ] = useState(5)
+
+  const [isWorking, setIsWorking]: [
+    boolean,
+    React.Dispatch<React.SetStateAction<boolean>>
+  ] = useState(false)
 
   useEffect(() => {
-    if (secondsLeft <= 0) return
+    if (!isWorking) return
+
+    if (secondsLeft <= 0) {
+      const successAudio = new Audio(successSound)
+      successAudio.currentTime = 0
+      successAudio.play().catch(() => {})
+      return undefined
+    }
+
+    const tickAudio = new Audio(tickSound)
 
     const interval = setInterval(() => {
-      setSecondsLeft((prev) => prev - 1)
+      setSecondsLeft((prev) => {
+        tickAudio.currentTime = 0
+        tickAudio.play().catch(() => {})
+        return prev - 1
+      })
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [secondsLeft])
+  }, [secondsLeft, isWorking])
 
   function formatTimeFromSeconds(seconds: number): string {
     const m = Math.floor(seconds / 60)
@@ -33,7 +54,15 @@ function App() {
         <main className="flex flex-col items-center">
           <DurationPicker />
           <Counter timeLeft={() => formatTimeFromSeconds(secondsLeft)} />
-          <ButtonPrimary />
+          {!isWorking ? (
+            <ButtonPrimary onClick={() => setIsWorking(true)}>
+              Start
+            </ButtonPrimary>
+          ) : (
+            <ButtonSecondary onClick={() => setIsWorking(false)}>
+              Pause
+            </ButtonSecondary>
+          )}
         </main>
       </div>
     </>
