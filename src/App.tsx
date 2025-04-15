@@ -8,15 +8,9 @@ import tickSound from "./assets/clock_tick.wav"
 import successSound from "./assets/success.wav"
 
 function App() {
-  const [secondsLeft, setSecondsLeft]: [
-    number,
-    React.Dispatch<React.SetStateAction<number>>
-  ] = useState(5)
+  const [secondsLeft, setSecondsLeft] = useState(5)
 
-  const [isWorking, setIsWorking]: [
-    boolean,
-    React.Dispatch<React.SetStateAction<boolean>>
-  ] = useState(false)
+  const [isWorking, setIsWorking] = useState(false)
 
   useEffect(() => {
     if (!isWorking) return

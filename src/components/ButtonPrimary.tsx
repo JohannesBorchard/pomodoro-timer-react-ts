@@ -1,7 +1,7 @@
 import { ReactNode } from "react"
 
 interface ButtonPrimaryProps {
-  onClick: () => void
+  onClick?: () => void
   children: ReactNode
 }
 
