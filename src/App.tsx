@@ -7,33 +7,44 @@ import DurationPicker from "./components/DurationPicker"
 import tickSound from "./assets/clock_tick.wav"
 import successSound from "./assets/success.wav"
 
+/*
+[x] User should be able to start stop and resume a Pomodoro timer.
+[ ] User should be able to configure the default interval configuration; default work session should be 25 minutes, short break should be 5 minutes and longer break after 4 work sessions should be 15 minutes.
+[ ] Application should display the current session type (e.g., Work, Short Break, Long Break).
+[ ] It should also track the number of tracked work sessions
+[ ] Play a sound when a session ends to notify the user.
+[ ] Ensure the app is accessible and visually appealing on both desktop and mobile devices.
+*/
+
 function App() {
+  //ändern in array mit abwechselnd arbeit und pause in sekunden - abhängig von einstellungen
   const [secondsLeft, setSecondsLeft] = useState(5)
 
-  const [isWorking, setIsWorking] = useState(false)
+  const [state, setState] = useState("default")
 
   useEffect(() => {
-    if (!isWorking) return
-
-    if (secondsLeft <= 0) {
+    //noch nicht gestartet oder gerade pausiert
+    if (state === "default" || state === "pause") {
+      return undefined
+      //vorbei
+    } else if (secondsLeft <= 0) {
       const successAudio = new Audio(successSound)
       successAudio.currentTime = 0
       successAudio.play().catch(() => {})
       return undefined
+      //timer läuft
+    } else if (state === "working" || state === "break") {
+      const tickAudio = new Audio(tickSound)
+      const interval = setInterval(() => {
+        setSecondsLeft((prev) => {
+          tickAudio.currentTime = 0
+          tickAudio.play().catch(() => {})
+          return prev - 1
+        })
+      }, 1000)
+      return () => clearInterval(interval)
     }
-
-    const tickAudio = new Audio(tickSound)
-
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        tickAudio.currentTime = 0
-        tickAudio.play().catch(() => {})
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [secondsLeft, isWorking])
+  }, [secondsLeft, state])
 
   function formatTimeFromSeconds(seconds: number): string {
     const m = Math.floor(seconds / 60)
@@ -48,14 +59,23 @@ function App() {
         <main className="flex flex-col items-center">
           <DurationPicker />
           <Counter timeLeft={() => formatTimeFromSeconds(secondsLeft)} />
-          {!isWorking ? (
-            <ButtonPrimary onClick={() => setIsWorking(true)}>
+
+          {state === "default" && (
+            <ButtonPrimary onClick={() => setState("working")}>
               Start
             </ButtonPrimary>
-          ) : (
-            <ButtonSecondary onClick={() => setIsWorking(false)}>
+          )}
+
+          {state === "working" && (
+            <ButtonSecondary onClick={() => setState("pause")}>
               Pause
             </ButtonSecondary>
+          )}
+
+          {state === "pause" && (
+            <ButtonPrimary onClick={() => setState("working")}>
+              Resume
+            </ButtonPrimary>
           )}
         </main>
       </div>
