@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import ButtonPrimary from "./components/ButtonPrimary"
 import ButtonSecondary from "./components/ButtonSecondary"
 import Header from "./components/Header"
 import Counter from "./components/Counter"
 import DurationPicker from "./components/DurationPicker"
-import tickSound from "./assets/clock_tick.wav"
-import successSound from "./assets/success.wav"
 
 /*
 [x] User should be able to start stop and resume a Pomodoro timer.
@@ -17,60 +15,64 @@ import successSound from "./assets/success.wav"
 */
 
 function App() {
-  //ändern in array mit abwechselnd arbeit und pause in sekunden - abhängig von einstellungen
-  const [secondsLeft, setSecondsLeft] = useState(5)
+  //ändern in array mit abwechselnd Arbeit und pause in Sekunden - abhängig von einstellungen
+  type TimerState =
+    | "working"
+    | "shortBreak"
+    | "longBreak"
+    | "finished"
+    | "default"
+    | "pause"
 
-  const [state, setState] = useState("default")
+  const [state, setState] = useState<TimerState>("default")
 
-  useEffect(() => {
-    //noch nicht gestartet oder gerade pausiert
-    if (state === "default" || state === "pause") {
-      return undefined
-      //vorbei
-    } else if (secondsLeft <= 0) {
-      const successAudio = new Audio(successSound)
-      successAudio.currentTime = 0
-      successAudio.play().catch(() => {})
-      return undefined
-      //timer läuft
-    } else if (state === "working" || state === "break") {
-      const tickAudio = new Audio(tickSound)
-      const interval = setInterval(() => {
-        setSecondsLeft((prev) => {
-          tickAudio.currentTime = 0
-          tickAudio.play().catch(() => {})
-          return prev - 1
-        })
-      }, 1000)
-      return () => clearInterval(interval)
+  const bgColor = () => {
+    if (state === "default" || state === "working") return "bg-red-700"
+    if (state === "pause" || state === "shortBreak") return "bg-blue-700"
+  }
+  const [config, setConfig] = useState({
+    numberOfSessions: 8,
+    working: 25,
+    shortBreak: 5,
+    longBreak: 15
+  })
+
+  const timeTable: TimerState[] = ["working", "shortBreak"]
+
+  let activeTimeTableIndex = 0
+
+  function startWork() {
+    setState(timeTable[activeTimeTableIndex])
+  }
+
+  function nextState() {
+    if (timeTable.length > activeTimeTableIndex) {
+      activeTimeTableIndex++
+    } else if (timeTable.length === activeTimeTableIndex) {
+      setState("finished")
     }
-  }, [secondsLeft, state])
-
-  function formatTimeFromSeconds(seconds: number): string {
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+    setState(timeTable[activeTimeTableIndex])
   }
 
   return (
     <>
-      <div className="h-screen bg-red-700 text-white">
+      <div className={"h-screen text-white " + bgColor()}>
         <Header />
         <main className="flex flex-col items-center">
+          {state}
           <DurationPicker />
-          <Counter timeLeft={() => formatTimeFromSeconds(secondsLeft)} />
+          <Counter state={state} nextState={nextState} config={config} />
 
           {state === "default" && (
-            <ButtonPrimary onClick={() => setState("working")}>
-              Start
-            </ButtonPrimary>
+            <ButtonPrimary onClick={() => startWork()}>Start</ButtonPrimary>
           )}
 
-          {state === "working" && (
-            <ButtonSecondary onClick={() => setState("pause")}>
-              Pause
-            </ButtonSecondary>
-          )}
+          {state === "working" ||
+            (state === "shortBreak" && (
+              <ButtonSecondary onClick={() => setState("pause")}>
+                Pause
+              </ButtonSecondary>
+            ))}
 
           {state === "pause" && (
             <ButtonPrimary onClick={() => setState("working")}>
